@@ -8,14 +8,18 @@ let sites: string list =
   ; "http://ambersong.me"
   ]
 
-let links (page : string) : unit =
+let links (page : string) : string list =
   let soup = parse page in
   soup $$ "a[href]"
-  |> iter (fun a -> a |> R.attribute "href" |> print_endline)
+  |> to_list
+  |> List.map (fun a -> a |> R.attribute "href")
 
 let fetch (site : string) : unit t =
   Client.get (Uri.of_string site) >>= fun (_, body) ->
-  body |> Cohttp_lwt.Body.to_string >|= links
+  body |> Cohttp_lwt.Body.to_string >>= fun b ->
+    links b
+    |> List.iter print_endline;
+    Lwt.return ()
 
 let () =
   Lwt_main.run (Lwt.join (List.map fetch sites))
