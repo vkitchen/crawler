@@ -1,11 +1,17 @@
 open Lwt
 open Cohttp_lwt_unix
 
-let body =
-  Client.get (Uri.of_string "http://vaughan.kitchen") >>= fun (_, body) ->
-  body |> Cohttp_lwt.Body.to_string >|= fun body ->
-  body
+let sites: string list =
+  [ "http://vaughan.kitchen"
+  ; "http://potatocastles.com"
+  ; "http://ambersong.me"
+  ]
+
+let body (site : string) : unit t =
+  Client.get (Uri.of_string site) >>= fun (_, body) ->
+  body |> Cohttp_lwt.Body.to_string >>= fun body ->
+  print_endline body;
+  Lwt.return ()
 
 let () =
-  let body = Lwt_main.run body in
-  print_endline body
+  Lwt_main.run (Lwt.join (List.map body sites))
