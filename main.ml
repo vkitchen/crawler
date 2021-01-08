@@ -9,9 +9,7 @@ let sites: string list =
 
 let body (site : string) : unit t =
   Client.get (Uri.of_string site) >>= fun (_, body) ->
-  body |> Cohttp_lwt.Body.to_string >>= fun body ->
-  print_endline body;
-  Lwt.return ()
+  body |> Cohttp_lwt.Body.to_string >|= print_endline
 
 let () =
   Lwt_main.run (Lwt.join (List.map body sites))
