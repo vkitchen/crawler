@@ -7,9 +7,26 @@ open Soup
   - path relative to subdirs (misses gardening pages on vaughan.kitchen)
 *)
 
+(*
 let sites: string list =
   [ "http://vaughan.kitchen"
   ; "http://ambersong.me"
+  ]
+*)
+let sites: string list =
+  [ "https://thegentlechef.com"
+  ; "https://spicysouthernkitchen.com"
+  ; "https://lazycatkitchen.com"
+  ; "https://www.asaucykitchen.com"
+  ; "https://www.vegrecipesofindia.com"
+  ; "https://thecaspianchef.com"
+  ; "https://persianmama.com"
+  ; "https://www.unicornsinthekitchen.com"
+  ; "https://thestonesoup.com"
+  ; "https://www.afamilyfeast.com"
+  ; "https://hilahcooking.com"
+  ; "https://www.gimmesomeoven.com"
+  ; "https://www.chilipeppermadness.com" (* key too small *)
   ]
 
 let cons_uniq xs x =
@@ -83,16 +100,19 @@ let write_file (site : string) (body : string): unit =
 
 let fetch (site : string) : string list t =
   let site_uri = Uri.of_string site in
-  Client.get site_uri >>= fun (_, body) ->
-  body |> Cohttp_lwt.Body.to_string >>= fun b ->
-    write_file site b; (* write out html *)
-    links b
-      |> List.filter (fun l -> String.index_opt l '#' <> Some 0) (* remove fragment URIs *)
-      |> List.filter (fun l -> Uri.host (Uri.of_string l) = None) (* remove external URIs *)
-      |> List.map (fun l -> Uri.with_path site_uri (Uri.path (Uri.of_string l))) (* TODO fix bug with query fragments *)
-      |> List.map Uri.canonicalize
-      |> List.map Uri.to_string
-      |> Lwt.return
+  try%lwt Client.get site_uri >>= fun (_, body) ->
+    body |> Cohttp_lwt.Body.to_string >>= fun b ->
+      write_file site b; (* write out html *)
+      links b
+        |> List.filter (fun l -> String.index_opt l '#' <> Some 0) (* remove fragment URIs *)
+        |> List.filter (fun l -> Uri.host (Uri.of_string l) = None) (* remove external URIs *)
+        |> List.map (fun l -> Uri.with_path site_uri (Uri.path (Uri.of_string l))) (* TODO fix bug with query fragments *)
+        |> List.map Uri.canonicalize
+        |> List.map Uri.to_string
+        |> Lwt.return
+  with _ ->
+    print_endline ("Failed fetching: " ^ site);
+    Lwt.return []
 
 let rec scrape (fetched : string list) (queue : string list) : unit t =
   match queue with
@@ -100,10 +120,10 @@ let rec scrape (fetched : string list) (queue : string list) : unit t =
   | x :: tl ->
     Unix.sleep 1;
     print_endline x;
-    (*
+(*
     List.iter (fun l -> print_endline ("  F  " ^ l)) fetched;
     List.iter (fun l -> print_endline ("  Q  " ^ l)) tl;
-    *)
+*)
     let%lwt q = fetch x in
     let q = List.filter (fun l -> l <> x && not (List.exists (fun l_ -> l = l_) fetched)) q in
     scrape (x :: fetched) (dedupe (tl @ q))
