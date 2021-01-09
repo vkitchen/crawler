@@ -98,6 +98,7 @@ let rec scrape (fetched : string list) (queue : string list) : unit t =
   match queue with
   | [] -> Lwt.return ()
   | x :: tl ->
+    Unix.sleep 1;
     print_endline x;
     (*
     List.iter (fun l -> print_endline ("  F  " ^ l)) fetched;
