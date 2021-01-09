@@ -27,9 +27,9 @@ let fetch (site : string) : string list t =
   Client.get site_uri >>= fun (_, body) ->
   body |> Cohttp_lwt.Body.to_string >>= fun b ->
     links b
-      |> List.filter (fun l -> String.index_opt l '#' <> Some 0) (*remove fragment URIs*)
-      |> List.filter (fun l -> Uri.host (Uri.of_string l) = None) (* remove external URIs*)
-      |> List.map (fun l -> Uri.with_path site_uri l)
+      |> List.filter (fun l -> String.index_opt l '#' <> Some 0) (* remove fragment URIs *)
+      |> List.filter (fun l -> Uri.host (Uri.of_string l) = None) (* remove external URIs *)
+      |> List.map (fun l -> Uri.with_path site_uri (Uri.path (Uri.of_string l))) (* TODO fix bug with query fragments *)
       |> List.map Uri.canonicalize
       |> List.map Uri.to_string
       |> Lwt.return
