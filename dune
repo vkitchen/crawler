@@ -1,5 +1,5 @@
 (executable
   (name main)
-  (libraries cohttp-lwt-unix lambdasoup)
+  (libraries str cohttp-lwt-unix lambdasoup)
   (preprocess (pps lwt_ppx))
 )

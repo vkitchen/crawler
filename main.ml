@@ -2,6 +2,11 @@ open Lwt
 open Cohttp_lwt_unix
 open Soup
 
+(*
+  TODO
+  - path relative to subdirs (misses gardening pages on vaughan.kitchen)
+*)
+
 let sites: string list =
   [ "http://vaughan.kitchen"
   ; "http://ambersong.me"
@@ -22,10 +27,65 @@ let links (page : string) : string list =
   |> to_list
   |> List.map (fun a -> a |> R.attribute "href")
 
+let mkdir_p (path : string) : bool =
+  if Sys.file_exists path && Sys.is_directory path then
+    true
+  else if Sys.file_exists path then begin
+    print_endline ("Failed to create path '" ^ path ^ "' already exists");
+    false
+  end else
+    let chunks = Str.split (Str.regexp "/+") path in
+    match chunks with
+      | [] -> false
+      | x :: tl ->
+        if tl = [] then
+          if not (Sys.file_exists x) then begin
+            Unix.mkdir x 0o777;
+            true
+          end else
+            false (* ?? *)
+        else
+          List.fold_left (fun x xs ->
+            let res = x ^ "/" ^ xs in
+            (if not (Sys.file_exists res) then
+              Unix.mkdir res 0o777
+            else
+              ());
+            res
+          ) x tl <> "" (* bad hack *)
+
+let write_file (site : string) (body : string): unit =
+  let site_uri = Uri.of_string site in
+  let host = match Uri.host site_uri with
+    | None -> ""
+    | Some x -> x
+  in
+  let path = Uri.path site_uri in
+  if path = "" || host = "" then
+    ()
+  else
+    let chunks = Str.split (Str.regexp "/+") path in
+    match List.rev chunks with
+      | [] -> ()
+      | x :: tl ->
+        let tl = List.rev tl in
+        let dir = String.concat "/" (host :: tl) in
+        if mkdir_p dir then
+          let filename = dir ^ "/" ^ x ^ ".ccml" in
+          if Sys.file_exists filename then
+            print_endline ("Failed to write '" ^ filename ^ "' file already exists")
+          else
+            let fh = open_out filename in
+            Printf.fprintf fh "%s\n" body;
+            close_out fh
+        else
+          () (* should be error? *)
+
 let fetch (site : string) : string list t =
   let site_uri = Uri.of_string site in
   Client.get site_uri >>= fun (_, body) ->
   body |> Cohttp_lwt.Body.to_string >>= fun b ->
+    write_file site b; (* write out html *)
     links b
       |> List.filter (fun l -> String.index_opt l '#' <> Some 0) (* remove fragment URIs *)
       |> List.filter (fun l -> Uri.host (Uri.of_string l) = None) (* remove external URIs *)
