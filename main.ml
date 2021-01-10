@@ -98,14 +98,17 @@ let write_file (site : string) (body : string): unit =
         else
           () (* should be error? *)
 
-let fetch (site : string) : string list t =
+let fetch (domain : string) (site : string) : string list t =
   let site_uri = Uri.of_string site in
   try%lwt Client.get site_uri >>= fun (_, body) ->
     body |> Cohttp_lwt.Body.to_string >>= fun b ->
       write_file site b; (* write out html *)
       links b
         |> List.filter (fun l -> String.index_opt l '#' <> Some 0) (* remove fragment URIs *)
-        |> List.filter (fun l -> Uri.host (Uri.of_string l) = None) (* remove external URIs *)
+        |> List.filter (fun l -> match Uri.host (Uri.of_string l) with
+          | None -> true
+          | Some d -> d = domain
+        ) (* remove external URIs *)
         |> List.map (fun l -> Uri.with_path site_uri (Uri.path (Uri.of_string l))) (* TODO fix bug with query fragments *)
         |> List.map Uri.canonicalize
         |> List.map Uri.to_string
@@ -114,7 +117,7 @@ let fetch (site : string) : string list t =
     print_endline ("Failed fetching: " ^ site);
     Lwt.return []
 
-let rec scrape (fetched : string list) (queue : string list) : unit t =
+let rec scrape (domain : string) (fetched : string list) (queue : string list) : unit t =
   match queue with
   | [] -> Lwt.return ()
   | x :: tl ->
@@ -124,9 +127,13 @@ let rec scrape (fetched : string list) (queue : string list) : unit t =
     List.iter (fun l -> print_endline ("  F  " ^ l)) fetched;
     List.iter (fun l -> print_endline ("  Q  " ^ l)) tl;
 *)
-    let%lwt q = fetch x in
+    let%lwt q = fetch domain x in
     let q = List.filter (fun l -> l <> x && not (List.exists (fun l_ -> l = l_) fetched)) q in
-    scrape (x :: fetched) (dedupe (tl @ q))
+    scrape domain (x :: fetched) (dedupe (tl @ q))
 
 let () =
-  Lwt_main.run (Lwt.join (List.map (fun s -> scrape [] (s :: [])) sites))
+  Lwt_main.run (Lwt.join (List.map (fun s ->
+    match Uri.host (Uri.of_string s) with
+      | None -> Lwt.return ()
+      | Some d -> scrape d [] (s :: [])) sites
+  ))
