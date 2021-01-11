@@ -1,5 +1,14 @@
 (executable
   (name main)
+  (modules main)
   (libraries str cohttp-lwt-unix lambdasoup)
   (preprocess (pps lwt_ppx))
 )
+
+(executable
+  (name get_image)
+  (modules get_image)
+  (libraries str cohttp-lwt-unix lambdasoup)
+  (preprocess (pps lwt_ppx))
+)
+
