@@ -12,3 +12,9 @@
   (preprocess (pps lwt_ppx))
 )
 
+(executable
+  (name sqlite_test)
+  (modules sqlite_test)
+  (libraries str sqlite3)
+)
+
