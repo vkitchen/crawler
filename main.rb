@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'uri'
 require 'net/http'
+require 'digest/md5'
 
 def strcmp(haystack, start, needle)
 	return false if haystack.length < start + needle.length
@@ -50,5 +51,10 @@ if __FILE__ == $0
 	lnks = links(res.body)
 	lnks.each do |lnk|
 		puts href(lnk)
+	end
+	filename = Digest::MD5.hexdigest(res.body)
+	File.open("#{filename}.html", 'w') do |file|
+		file.puts(uri)
+		file.write(res.body)
 	end
 end
