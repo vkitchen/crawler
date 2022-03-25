@@ -44,17 +44,44 @@ def href(link)
 	""
 end
 
-if __FILE__ == $0
-	uri = URI('http://vaughan.kitchen')
-	res = Net::HTTP.get_response(uri)
-	abort("Request failed!") if !res.is_a?(Net::HTTPSuccess)
-	lnks = links(res.body)
-	lnks.each do |lnk|
-		puts href(lnk)
+$visited = {}
+def crawl(url)
+	return if $visited.key?(url)
+	res = Net::HTTP.get_response(url)
+	if !res.is_a?(Net::HTTPSuccess)
+		puts "Failed on request for resource: #{url}"
+		return
 	end
+	$visited[url] = true
+
+	puts "Retrieved: #{url}"
+
 	filename = Digest::MD5.hexdigest(res.body)
 	File.open("#{filename}.html", 'w') do |file|
-		file.puts(uri)
+		file.puts(url)
 		file.write(res.body)
+	end if !File.exist?("#{filename}.html")
+
+	lnks = links(res.body)
+	lnks.each do |lnk|
+		path = href(lnk)
+		if !path.ascii_only?
+			puts "Skipping... URL Contains UTF-8: #{path}"
+			next
+		end
+		begin
+			nextUrl = URI.join(url, URI(path))
+			if url.host != nextUrl.host
+				puts "Skipping... External URL #{nextUrl}"
+				next
+			end
+			crawl(nextUrl)
+		rescue URI::InvalidURIError
+			puts "Invalid URL: #{path}"
+		end
 	end
+end
+
+if __FILE__ == $0
+	crawl(URI('http://vaughan.kitchen'))
 end
