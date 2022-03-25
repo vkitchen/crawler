@@ -2,12 +2,7 @@
 require 'uri'
 require 'net/http'
 
-uri = URI('http://vaughan.kitchen')
-res = Net::HTTP.get_response(uri)
-abort("Request failed!") if !res.is_a?(Net::HTTPSuccess)
-
 def strcmp(haystack, start, needle)
-	# TODO check this math
 	return false if haystack.length < start + needle.length
 	for i in 0...needle.length
 		# TODO case insensitive
@@ -34,4 +29,9 @@ def links(html)
 	links
 end
 
-puts links(res.body)
+if __FILE__ == $0
+	uri = URI('http://vaughan.kitchen')
+	res = Net::HTTP.get_response(uri)
+	abort("Request failed!") if !res.is_a?(Net::HTTPSuccess)
+	puts links(res.body)
+end
