@@ -5,8 +5,7 @@ require 'net/http'
 def strcmp(haystack, start, needle)
 	return false if haystack.length < start + needle.length
 	for i in 0...needle.length
-		# TODO case insensitive
-		return false if haystack[start+i].chr != needle[i].chr
+		return false if haystack[start+i].chr.downcase != needle[i].chr.downcase
 	end
 	true
 end

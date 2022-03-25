@@ -9,6 +9,8 @@ def test_strcmp
 	raise "Failed middle" if !strcmp("A man a plan a canal panama", 8, "plan a can")
 	# Finds at end of string
 	raise "Failed end" if !strcmp("A man a plan a canal panama", 26, "a")
+	# Finds with case difference
+	raise "Failed case" if !strcmp("A man a plan a canal panama", 0, "a")
 	# Doesn't match
 	raise "Failed not a match" if strcmp("A man a plan a canal panama", 0, "dog")
 	# Index too high
