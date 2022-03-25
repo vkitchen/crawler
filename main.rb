@@ -15,8 +15,7 @@ def links(html)
 	start = 0
 	searching = false
 	for i in 0...html.length
-		# TODO no guarantee href follows a
-		if strcmp(html, i, "<a href")
+		if strcmp(html, i, "<a")
 			searching = true
 			start = i
 		end
@@ -28,9 +27,28 @@ def links(html)
 	links
 end
 
+def href(link)
+	start = 0
+	searching = false
+	for i in 0...link.length
+		if strcmp(link, i, "href=\"")
+			searching = true
+			start = i + 6
+		end
+		if searching && i > start && link[i].chr == '"'
+			searching = false
+			return link[start..i-1]
+		end
+	end
+	""
+end
+
 if __FILE__ == $0
 	uri = URI('http://vaughan.kitchen')
 	res = Net::HTTP.get_response(uri)
 	abort("Request failed!") if !res.is_a?(Net::HTTPSuccess)
-	puts links(res.body)
+	lnks = links(res.body)
+	lnks.each do |lnk|
+		puts href(lnk)
+	end
 end
