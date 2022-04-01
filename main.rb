@@ -82,6 +82,14 @@ def crawl(url)
 	end
 end
 
+$usage = <<-END
+Usage:
+  #{$0} [url]
+END
+
 if __FILE__ == $0
-	crawl(URI('http://vaughan.kitchen'))
+	abort $usage if $*[0].nil?
+	url = URI($*[0])
+	abort "ERROR: Missing scheme. Try http://#{url}" if url.scheme.nil?
+	crawl(url)
 end
