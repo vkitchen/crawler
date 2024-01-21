@@ -44,6 +44,7 @@ def href(link)
 	""
 end
 
+$robots = []
 $visited = {}
 def crawl(url, depth)
 	return if $visited.key?(url)
@@ -84,11 +85,32 @@ def crawl(url, depth)
 				puts "Skipping... External URL #{nextUrl}"
 				next
 			end
+			skip = false
+			$robots.each do |rule|
+				if nextUrl.to_s.include? rule
+					puts "Skipping... Disallowed by robots.txt rule '#{rule}'"
+					skip = true
+					break
+				end
+			end
+			next if skip
 			crawl(nextUrl, depth + 1)
 		rescue URI::InvalidURIError
 			puts "Invalid URL: #{path}"
 		end
 	end
+end
+
+def robots(url)
+	url = URI.join(url, URI('/robots.txt'))
+
+	res = Net::HTTP.get_response(url, {'User-Agent' => 'Mozilla/5.0 (compatible; PotatoCastlesBot; +http://potatocastles.com)'} )
+	if !res.is_a?(Net::HTTPSuccess)
+		puts "Failed requesting robots.txt"
+		return
+	end
+
+	$robots = res.body.lines.grep(/^Disallow:/).map { |rule| rule.delete_prefix('Disallow:').strip.tr('*', '') }
 end
 
 $usage = <<-END
@@ -101,5 +123,9 @@ if __FILE__ == $0
 	url = URI($*[0])
 	abort "ERROR: Missing scheme. Try http://#{url}" if url.scheme.nil?
 	url.normalize!
+	robots(url)
+	puts '## robots.txt ##'
+	puts $robots
+	puts '## Crawling ##'
 	crawl(url, 0)
 end
