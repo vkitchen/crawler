@@ -94,6 +94,8 @@ def crawl(url, depth)
 				end
 			end
 			next if skip
+			nextUrl.fragment = nil
+			nextUrl.normalize!
 			crawl(nextUrl, depth + 1)
 		rescue URI::InvalidURIError
 			puts "Invalid URL: #{path}"
