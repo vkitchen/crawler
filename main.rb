@@ -91,5 +91,6 @@ if __FILE__ == $0
 	abort $usage if $*[0].nil?
 	url = URI($*[0])
 	abort "ERROR: Missing scheme. Try http://#{url}" if url.scheme.nil?
+	url.normalize!
 	crawl(url)
 end
