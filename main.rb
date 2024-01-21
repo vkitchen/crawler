@@ -48,6 +48,9 @@ $visited = {}
 def crawl(url, depth)
 	return if $visited.key?(url)
 
+        # Throttling
+        sleep 1
+
 	filename = Base64.urlsafe_encode64(url.to_s)
 	if depth > 0 && File.exist?("#{filename}.html")
 		puts "Already retrieved: #{url}"
