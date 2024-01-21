@@ -57,7 +57,7 @@ def crawl(url, depth)
 		return
 	end
 
-	res = Net::HTTP.get_response(url)
+	res = Net::HTTP.get_response(url, {'User-Agent' => 'Mozilla/5.0 (compatible; PotatoCastlesBot; +http://potatocastles.com)'} )
 	if !res.is_a?(Net::HTTPSuccess)
 		puts "Failed on request for resource: #{url}"
 		return
