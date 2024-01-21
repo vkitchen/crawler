@@ -45,8 +45,15 @@ def href(link)
 end
 
 $visited = {}
-def crawl(url)
+def crawl(url, depth)
 	return if $visited.key?(url)
+
+	filename = Base64.urlsafe_encode64(url.to_s)
+	if depth > 0 && File.exist?("#{filename}.html")
+		puts "Already retrieved: #{url}"
+		return
+	end
+
 	res = Net::HTTP.get_response(url)
 	if !res.is_a?(Net::HTTPSuccess)
 		puts "Failed on request for resource: #{url}"
@@ -56,11 +63,10 @@ def crawl(url)
 
 	puts "Retrieved: #{url}"
 
-	filename = Base64.urlsafe_encode64(url.to_s)
 	File.open("#{filename}.html", 'w') do |file|
 		file.puts(url)
 		file.write(res.body)
-	end if !File.exist?("#{filename}.html")
+	end if depth > 0
 
 	lnks = links(res.body)
 	lnks.each do |lnk|
@@ -75,7 +81,7 @@ def crawl(url)
 				puts "Skipping... External URL #{nextUrl}"
 				next
 			end
-			crawl(nextUrl)
+			crawl(nextUrl, depth + 1)
 		rescue URI::InvalidURIError
 			puts "Invalid URL: #{path}"
 		end
@@ -92,5 +98,5 @@ if __FILE__ == $0
 	url = URI($*[0])
 	abort "ERROR: Missing scheme. Try http://#{url}" if url.scheme.nil?
 	url.normalize!
-	crawl(url)
+	crawl(url, 0)
 end
