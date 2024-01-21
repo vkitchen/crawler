@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
-require 'uri'
+require 'base64'
 require 'net/http'
-require 'digest/md5'
+require 'uri'
 
 def strcmp(haystack, start, needle)
 	return false if haystack.length < start + needle.length
@@ -56,7 +56,7 @@ def crawl(url)
 
 	puts "Retrieved: #{url}"
 
-	filename = Digest::MD5.hexdigest(res.body)
+	filename = Base64.urlsafe_encode64(url.to_s)
 	File.open("#{filename}.html", 'w') do |file|
 		file.puts(url)
 		file.write(res.body)
