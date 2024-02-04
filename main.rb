@@ -68,7 +68,6 @@ def crawl(url, depth)
 	puts "Retrieved: #{url}"
 
 	File.open("#{filename}.html", 'w') do |file|
-		file.puts(url)
 		file.write(res.body)
 	end if depth > 0
 
