@@ -59,6 +59,39 @@ def crawl(url, depth)
 	end
 
 	res = Net::HTTP.get_response(url, {'User-Agent' => 'Mozilla/5.0 (compatible; PotatoCastlesBot; +http://potatocastles.com)'} )
+	if res.is_a?(Net::HTTPRedirection)
+		path = res['Location']
+
+		puts "Redirected to: #{path}"
+
+		if !path.ascii_only?
+			puts "Skipping... URL Contains UTF-8: #{path}"
+			return
+		end
+		begin
+			nextUrl = URI.join(url, URI(path))
+			if url.host != nextUrl.host
+				puts "Skipping... External URL #{nextUrl}"
+				return
+			end
+			skip = false
+			$robots.each do |rule|
+				if nextUrl.to_s.include? rule
+					puts "Skipping... Disallowed by robots.txt rule '#{rule}'"
+					skip = true
+					break
+				end
+			end
+			return if skip
+			nextUrl.fragment = nil
+			nextUrl.normalize!
+			crawl(nextUrl, depth)
+		rescue URI::InvalidURIError
+			puts "Invalid URL: #{path}"
+		end
+
+		return
+	end
 	if !res.is_a?(Net::HTTPSuccess)
 		puts "Failed on request for resource: #{url}"
 		return
