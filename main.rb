@@ -44,7 +44,7 @@ def href(link)
 	""
 end
 
-$robots = []
+$robots = [ 'comment' ]
 $visited = {}
 def crawl(url, depth)
 	return if $visited.key?(url)
@@ -144,7 +144,7 @@ def robots(url)
 		return
 	end
 
-	$robots = res.body.lines.grep(/^Disallow:/).map { |rule| rule.delete_prefix('Disallow:').strip.tr('*', '') }
+	$robots.concat res.body.lines.grep(/^Disallow:/).map { |rule| rule.delete_prefix('Disallow:').strip.tr('*', '') }
 end
 
 $usage = <<-END
