@@ -1,0 +1,11 @@
+.{
+	.name = "standalone",
+	.version = "0.1.0",
+	.paths = .{"./src"},
+	.dependencies = .{
+		.zqlite = .{
+			.url = "https://github.com/karlseguin/zqlite.zig",
+			.hash = "1220a173f2ca69317180fb421725f43d86b71cbdd51a9a4aab96d9ee71850ec1cd44",
+	    },
+	},
+}
