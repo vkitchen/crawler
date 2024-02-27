@@ -4,7 +4,7 @@
 	.paths = .{"./src"},
 	.dependencies = .{
 		.zqlite = .{
-			.url = "https://github.com/karlseguin/zqlite.zig",
+			.url = "https://github.com/karlseguin/zqlite.zig/archive/5f0379ea624bf8f67e9a91474f780a35db8695d5.tar.gz",
 			.hash = "1220a173f2ca69317180fb421725f43d86b71cbdd51a9a4aab96d9ee71850ec1cd44",
 	    },
 	},

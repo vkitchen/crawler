@@ -38,5 +38,6 @@ pub fn build(b: *std.Build) !void {
     });
     crawler.root_module.addImport("zqlite", zqlite);
     crawler.linkLibC();
+    crawler.linkSystemLibrary("libcurl");
     b.installArtifact(crawler);
 }
